@@ -9,6 +9,12 @@ const PORT = process.env.PORT || 5001;
 
 app.use(cors());
 app.use(express.json());
+// log every request
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${req.method} ${req.url}`);
+  next();
+});
 //sends all requests to /api/properties to the propertiesRouter
 app.use('/api/properties', propertiesRouter);
 
