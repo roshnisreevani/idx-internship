@@ -1,4 +1,4 @@
-//uses the proxy in package.json so we dont have to type the localhost every time
+//file is responsible for making API calls to the backend. It connects the backend to the frontend.
 const API_BASE = '';
 
 // asks for backend for a list of properties

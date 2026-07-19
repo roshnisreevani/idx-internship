@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchProperties } from '../api/client';
 import './ListingsPage.css';
 
-function ListingsPage() {
+function ListingsPage() { 
 
   // stores all the properties
   const [properties, setProperties] = useState([]);
@@ -16,7 +16,7 @@ function ListingsPage() {
   // stores the total number of properties
   const [total, setTotal] = useState(0);
 
-  // load properties when the page opens
+  //React will load properties when the page opens
   useEffect(() => {
     loadProperties();
   }, []);
@@ -34,7 +34,7 @@ function ListingsPage() {
         offset: 0
       });
 
-      setProperties(data.results); //save properties
+      setProperties(data.results); //Once data comes back, save properties
       setTotal(data.total); //save total number of properties
 
     } catch (err) { //show error if something went wrong
@@ -79,9 +79,18 @@ function PropertyCard({ property }) { //displays one property card with its deta
   return (
         <div className="property-card">
 
-        <div className="property-image"> //placeholder until images are addedd
-         No Image
+        <div className="property-image">
+            {property.L_Photos ? (
+        <img
+          src={JSON.parse(property.L_Photos)[0]}
+          alt={property.L_Address}
+        />
+        ) : (
+        <div className="no-image">
+          No Image
         </div>
+      )}
+      </div>
 
         <div className="property-info">
 
@@ -97,7 +106,7 @@ function PropertyCard({ property }) { //displays one property card with its deta
           {property.L_City}, {property.L_State}
         </div>
 
-        <div className="property-details"> //displays the number of beds, baths, and sqft if available
+        <div className="property-details"> 
           <span>{property.L_Keyword2} beds</span>
           <span>•</span>
           <span>{property.LM_Dec_3} baths</span>
