@@ -23,7 +23,7 @@ router.get('/:id/openhouses', async (req, res) => {
       });
     }
 
-    // get all open houses for this property
+    // if exists: get all open houses for this property
     const [openhouses] = await pool.query(
       'SELECT * FROM rets_openhouse WHERE L_ListingID = ? ORDER BY OpenHouseDate, OH_StartTime',
       [id]
@@ -47,7 +47,7 @@ router.get('/:id/openhouses', async (req, res) => {
   }
 });
 
-// route for getting the details for a single property by its listing ID
+// gets details for one property by its listing ID
 router.get('/:id', async (req, res) => {
   try {
 
@@ -57,7 +57,7 @@ router.get('/:id', async (req, res) => {
     // make sure the property exists
     const [propertyCheck] = await pool.query(
       'SELECT L_ListingID FROM rets_property WHERE L_ListingID = ?',
-      [id]
+      [id] //where you get all info for that property 
     );
 
     // return an error if the property doesn't exist
