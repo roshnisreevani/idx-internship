@@ -1,8 +1,17 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { render, screen } from "@testing-library/react";
+import App from "./App";
 
-test('renders learn react link', () => {
+test("shows loading message when app starts", () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByText(/Loading properties/i)).toBeInTheDocument();
+});
+
+test("loading message contains the word properties", () => {
+  render(<App />);
+  expect(screen.getByText(/properties/i)).toBeInTheDocument();
+});
+
+test("loading message is displayed", () => {
+  render(<App />);
+  expect(screen.getByText("Loading properties...")).toBeTruthy();
 });

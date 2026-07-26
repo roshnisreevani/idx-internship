@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchProperties } from '../api/client';
+import PropertyFilters from '../components/PropertyFilters';
 import './ListingsPage.css';
 
 function ListingsPage() { 
@@ -22,31 +23,30 @@ function ListingsPage() {
   }, []);
 
   // get properties from the backend
-  async function loadProperties() {
-    try {
+  //updated to accept filters from the search form instead of loading every property 
+  async function loadProperties(filters = {}) {
+  try {
+    setLoading(true);
+    setError(null);
 
-      setLoading(true);
-      setError(null);
+    const data = await fetchProperties({
+      limit: 20,
+      offset: 0,
+      ...filters //returns only matching properties based on the filters selected by the user
+    });
 
-      const data = await fetchProperties({
-        //asks backend for properties 
-        limit: 20,
-        offset: 0
-      });
+    setProperties(data.results);
+    setTotal(data.total);
 
-      setProperties(data.results); //Once data comes back, save properties
-      setTotal(data.total); //save total number of properties
+  } catch (err) {
+    setError("Failed to load properties.");
 
-    } catch (err) { //show error if something went wrong
-
-      setError('Failed to load properties.');
-
-    } finally {
-
-      setLoading(false);
-
-    }
+  } finally {
+    setLoading(false);
   }
+}
+
+   
   if (loading) {
   return <div className="loading">Loading properties...</div>;
 }
@@ -58,11 +58,18 @@ if (error) {
 return (
   <div className="listings-page">
 
-    <h1>Property Listings</h1>
+    <div className="hero-section">
+      <h1>Find your perfect home</h1>
+      <p>Search by city, price, bedrooms, and more.</p>
+    </div>
 
-    <p>
-      Showing {properties.length} of {total} properties
-    </p>
+    <div className="search-container">
+      <PropertyFilters onSearch={loadProperties} />
+    </div>
+
+<p className="property-count">
+  Showing {properties.length} of {total} properties
+</p>
 
     <div className="property-grid">
   {properties.map(property => ( //creates a card for each property in the list
@@ -79,21 +86,15 @@ function PropertyCard({ property }) { //displays one property card with its deta
   return (
         <div className="property-card">
 
-        <div className="property-image">
-            {property.L_Photos ? (
-        <img
-          src={JSON.parse(property.L_Photos)[0]}
-          alt={property.L_Address}
-        />
-        ) : (
-        <div className="no-image">
-          No Image
-        </div>
-      )}
-      </div>
+          <div className="property-image">
+  {property.L_Photos ? (
+    <>
+      <img
+        src={JSON.parse(property.L_Photos)[0]}
+        alt={property.L_Address}
+      />
 
-        <div className="property-info">
-
+      <div className="image-overlay">
         <div className="price">
           ${property.L_SystemPrice?.toLocaleString()}
         </div>
@@ -105,8 +106,20 @@ function PropertyCard({ property }) { //displays one property card with its deta
         <div className="city">
           {property.L_City}, {property.L_State}
         </div>
+      </div>
+    </>
+  ) : (
+    <div className="no-image">
+      No Image
+    </div>
+  )}
+</div>
 
-        <div className="property-details"> 
+<div className="property-info">
+
+  <div className="property-details">
+
+         
           <span>{property.L_Keyword2} beds</span>
           <span>•</span>
           <span>{property.LM_Dec_3} baths</span>

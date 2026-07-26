@@ -1,0 +1,39 @@
+/* seach form*/
+.filter-form {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+/* input boxes*/
+.filter-form input {
+  padding: 12px 16px;
+  border: 1px solid #dcdcdc;
+  border-radius: 10px;
+  font-size: 15px;
+  min-width: 160px;
+  outline: none;
+}
+
+/* search button */
+.filter-form input:focus {
+  border-color: #1976d2;
+}
+
+.filter-form button {
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+
+/* hover effect*/
+.filter-form button:hover {
+  background: #1565c0;
+}
