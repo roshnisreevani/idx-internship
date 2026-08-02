@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { fetchProperties } from '../api/client';
 import PropertyFilters from '../components/PropertyFilters';
 import './ListingsPage.css';
+import Pagination from '../components/Pagination';
 
+//accept filters instead of reloading every time
 function ListingsPage() { 
 
   // stores all the properties
@@ -17,22 +19,38 @@ function ListingsPage() {
   // stores the total number of properties
   const [total, setTotal] = useState(0);
 
-  //React will load properties when the page opens
+
+  //Week 7 New Work:allows users to search for properties 
+  // based on specific criteria. 
+  const [filters, setFilters] = useState({});
+
+  // keeps track of the current page
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // number of properties shown per page
+  const [itemsPerPage] = useState(20);
+
+  // reload properties whenever the filters or page changes
   useEffect(() => {
     loadProperties();
-  }, []);
+  }, [filters, currentPage]);
 
   // get properties from the backend
   //updated to accept filters from the search form instead of loading every property 
-  async function loadProperties(filters = {}) {
+  // get properties from the backend
+  async function loadProperties() {
   try {
     setLoading(true);
     setError(null);
 
+    // calculate where this page should start
+    const offset = (currentPage - 1) * itemsPerPage;
+
+    // send the filters and pagination to the backend
     const data = await fetchProperties({
-      limit: 20,
-      offset: 0,
-      ...filters //returns only matching properties based on the filters selected by the user
+      ...filters,
+      limit: itemsPerPage,
+      offset
     });
 
     setProperties(data.results);
@@ -45,6 +63,23 @@ function ListingsPage() {
     setLoading(false);
   }
 }
+
+// update the filters and go back to the first page
+const handleSearch = (newFilters) => {
+  setFilters(newFilters);
+  setCurrentPage(1);
+};
+
+// change pages
+const handlePageChange = (newPage) => {
+  setCurrentPage(newPage);
+
+  // scroll back to the top of the page after changing pages
+  window.scrollTo(0, 0);
+};
+
+// calculate the total number of pages
+const totalPages = Math.ceil(total / itemsPerPage);
 
    
   if (loading) {
@@ -64,12 +99,16 @@ return (
     </div>
 
     <div className="search-container">
-      <PropertyFilters onSearch={loadProperties} />
+      {/* connected filter component to the ListingsPage  */}
+      <PropertyFilters onSearch={handleSearch} />
     </div>
 
-<p className="property-count">
-  Showing {properties.length} of {total} properties
-</p>
+{!loading && !error && (
+  <p className="property-count">
+    Showing {((currentPage - 1) * itemsPerPage) + 1} -
+    {Math.min(currentPage * itemsPerPage, total)} of {total} properties
+  </p>
+)}
 
     <div className="property-grid">
   {properties.map(property => ( //creates a card for each property in the list
@@ -79,6 +118,15 @@ return (
     />
   ))}
 </div>
+
+{!loading && !error && properties.length > 0 && (
+  <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={handlePageChange}
+  />
+)}
+
 
   </div>
 );
@@ -135,6 +183,7 @@ function PropertyCard({ property }) { //displays one property card with its deta
       </div>
 
     </div>
+    
   );
 }
 }

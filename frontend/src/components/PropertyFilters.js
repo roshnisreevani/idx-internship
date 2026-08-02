@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import './PropertyFilters.css';
 
 
-
+//added search filters to the frontend 
 function PropertyFilters({ onSearch }) {
-  const [filters, setFilters] = useState({ //to store all the users search filters
+  const [filters, setFilters] = useState({ 
+    //to store all the users search filters like:
     city: '',
     beds: '',
     baths: '',
@@ -23,7 +24,8 @@ function PropertyFilters({ onSearch }) {
   function handleSubmit(event) {
     event.preventDefault();
 
-    if (onSearch) { //run the search from the selected filters
+    if (onSearch) { 
+      //run the search from the selected filters
       onSearch(filters);
     }
   }
