@@ -147,8 +147,7 @@ function PropertyCard({ property }) {
     <div className="property-card" onClick={handleClick}>
 
     <div className="property-image">
-      */display multiple photos of a property
-      <PropertyImageCarousel
+        {/* display multiple photos of a property */}      <PropertyImageCarousel
         photos={property.L_Photos ? JSON.parse(property.L_Photos) : []}
         alt={property.L_Address}
       />
