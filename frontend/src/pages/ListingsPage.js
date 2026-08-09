@@ -3,6 +3,8 @@ import { fetchProperties } from '../api/client';
 import PropertyFilters from '../components/PropertyFilters';
 import './ListingsPage.css';
 import Pagination from '../components/Pagination';
+import { useNavigate } from 'react-router-dom';
+import PropertyImageCarousel from '../components/PropertyImageCarousel';
 
 //accept filters instead of reloading every time
 function ListingsPage() { 
@@ -37,7 +39,6 @@ function ListingsPage() {
 
   // get properties from the backend
   //updated to accept filters from the search form instead of loading every property 
-  // get properties from the backend
   async function loadProperties() {
   try {
     setLoading(true);
@@ -64,13 +65,14 @@ function ListingsPage() {
   }
 }
 
+//helper functions: when user performs new search:
 // update the filters and go back to the first page
 const handleSearch = (newFilters) => {
   setFilters(newFilters);
   setCurrentPage(1);
 };
 
-// change pages
+//changes page number
 const handlePageChange = (newPage) => {
   setCurrentPage(newPage);
 
@@ -130,15 +132,24 @@ return (
 
   </div>
 );
-function PropertyCard({ property }) { //displays one property card with its details
-  return (
-        <div className="property-card">
 
-          <div className="property-image">
-  {property.L_Photos ? (
-    <>
-      <img
-        src={JSON.parse(property.L_Photos)[0]}
+
+function PropertyCard({ property }) {
+  //Week 8: navigate to the property detail page when a card is clicked
+  const navigate = useNavigate();
+
+  //display the property image carousel, price, address, city, state, number of bedrooms, bathrooms, and square footage
+  const handleClick = () => {
+    navigate(`/property/${property.L_ListingID}`);
+  };
+
+  return (
+    <div className="property-card" onClick={handleClick}>
+
+    <div className="property-image">
+      */display multiple photos of a property
+      <PropertyImageCarousel
+        photos={property.L_Photos ? JSON.parse(property.L_Photos) : []}
         alt={property.L_Address}
       />
 
@@ -155,13 +166,7 @@ function PropertyCard({ property }) { //displays one property card with its deta
           {property.L_City}, {property.L_State}
         </div>
       </div>
-    </>
-  ) : (
-    <div className="no-image">
-      No Image
     </div>
-  )}
-</div>
 
 <div className="property-info">
 
