@@ -10,9 +10,20 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json());
 // log every request
+// Week 9: log every request to the console with a timestamp, method, URL, status code, and duration
+//middleware function that runs on everytime  a request is made. 
 app.use((req, res, next) => {
+  const start = Date.now();
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${req.method} ${req.url}`);
+
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+
+    console.log(
+      `[${timestamp}] ${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`
+    );
+  });
+
   next();
 });
 //sends all requests to /api/properties to the propertiesRouter

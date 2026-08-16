@@ -37,13 +37,12 @@ router.get('/:id/openhouses', async (req, res) => {
     });
 
   } catch (error) {
-    //show if something went wrong 
+    // show if something went wrong
     console.error(error);
 
     res.status(500).json({
       error: 'Failed to fetch open houses'
     });
-
   }
 });
 
@@ -57,7 +56,7 @@ router.get('/:id', async (req, res) => {
     // make sure the property exists
     const [propertyCheck] = await pool.query(
       'SELECT L_ListingID FROM rets_property WHERE L_ListingID = ?',
-      [id] //where you get all info for that property 
+      [id]
     );
 
     // return an error if the property doesn't exist
@@ -68,7 +67,7 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    // search for the property using its listing ID and get all information about it
+    // search for the property using its listing ID
     const [results] = await pool.query(
       'SELECT * FROM rets_property WHERE L_ListingID = ?',
       [id]
@@ -78,13 +77,12 @@ router.get('/:id', async (req, res) => {
     res.json(results[0]);
 
   } catch (error) {
-    //show if something went wrong 
+    // show if something went wrong
     console.error(error);
 
     res.status(500).json({
       error: 'Failed to fetch property'
     });
-
   }
 });
 
@@ -92,36 +90,95 @@ router.get('/:id', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
 
+    // Week 9: thsi makes sure that the limit is actually a number, if it is a string it returns an error 
+    if (req.query.limit && isNaN(req.query.limit)) {
+      return res.status(400).json({
+        error: 'limit must be a number'
+      });
+    }
+
+    if (req.query.offset && isNaN(req.query.offset)) {
+      return res.status(400).json({
+        error: 'offset must be a number'
+      });
+    }
+
     // pagination values (the default is the first 20 properties)
     const limit = parseInt(req.query.limit) || 20;
     const offset = parseInt(req.query.offset) || 0;
 
-    // get all filters from the user
-    const { city, zipcode, minPrice, maxPrice, beds, baths } = req.query;
+    // Week 9: sorting
+    const {
+      city,
+      zipcode,
+      minPrice,
+      maxPrice,
+      beds,
+      baths,
+      sortBy,
+      sortOrder
+    } = req.query;
 
     // make sure the user has entered valid values
     if (minPrice && isNaN(minPrice)) {
-      return res.status(400).json({ error: 'minPrice must be a number' });
+      return res.status(400).json({
+        error: 'minPrice must be a number'
+      });
     }
 
     if (maxPrice && isNaN(maxPrice)) {
-      return res.status(400).json({ error: 'maxPrice must be a number' });
+      return res.status(400).json({
+        error: 'maxPrice must be a number'
+      });
     }
 
     if (beds && isNaN(beds)) {
-      return res.status(400).json({ error: 'beds must be a number' });
+      return res.status(400).json({
+        error: 'beds must be a number'
+      });
     }
 
     if (baths && isNaN(baths)) {
-      return res.status(400).json({ error: 'baths must be a number' });
+      return res.status(400).json({
+        error: 'baths must be a number'
+      });
     }
 
     if (limit < 1 || limit > 100) {
-      return res.status(400).json({ error: 'limit must be between 1 and 100' });
+      return res.status(400).json({
+        error: 'limit must be between 1 and 100'
+      });
     }
 
     if (offset < 0) {
-      return res.status(400).json({ error: 'offset cannot be negative' });
+      return res.status(400).json({
+        error: 'offset cannot be negative'
+      });
+    }
+
+    // array of valid sorting fields. if request is not in this field it will return an error
+    const validSortFields = [
+      'L_SystemPrice',
+      'ListingContractDate',
+      'LM_Int2_3',
+      'L_Keyword2'
+    ];
+
+    const validSortOrders = ['ASC', 'DESC'];
+
+    if (sortBy && !validSortFields.includes(sortBy)) {
+      return res.status(400).json({
+        error: 'Invalid sort field'
+      });
+    }
+
+    if (
+      sortOrder &&
+      !validSortOrders.includes(sortOrder.toUpperCase())
+    ) {
+      return res.status(400).json({
+        error: 'Invalid sort order'
+      });
     }
 
     // build the WHERE clause based on the filters provided by the user
@@ -178,9 +235,20 @@ router.get('/', async (req, res) => {
 
     const total = countResult[0].total;
 
+    // build the ORDER BY clause if sorting was requested
+    let orderClause = '';
+
+    if (sortBy) {
+      const order = sortOrder
+        ? sortOrder.toUpperCase()
+        : 'ASC';
+
+      orderClause = `ORDER BY ${sortBy} ${order}`; 
+    }
+
     // get the matching properties
     const [results] = await pool.query(
-      `SELECT * FROM rets_property ${whereClause} LIMIT ? OFFSET ?`,
+      `SELECT * FROM rets_property ${whereClause} ${orderClause} LIMIT ? OFFSET ?`,
       [...values, limit, offset]
     );
 
@@ -199,7 +267,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({
       error: 'Failed to fetch properties'
     });
-
   }
 });
 

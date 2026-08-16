@@ -32,10 +32,16 @@ function ListingsPage() {
   // number of properties shown per page
   const [itemsPerPage] = useState(20);
 
-  // reload properties whenever the filters or page changes
+  //Week 9: let users sort properties by price, date, size, or beds (Part A: Sorting)
+  const [sortBy, setSortBy] = useState('');
+
+  // direction of the sort, either ASC or DESC
+  const [sortOrder, setSortOrder] = useState('ASC');
+
+  // reload properties whenever the filters, page, or sorting changes
   useEffect(() => {
     loadProperties();
-  }, [filters, currentPage]);
+  }, [filters, currentPage, sortBy, sortOrder]);
 
   // get properties from the backend
   //updated to accept filters from the search form instead of loading every property 
@@ -48,10 +54,12 @@ function ListingsPage() {
     const offset = (currentPage - 1) * itemsPerPage;
 
     // send the filters and pagination to the backend
+    // only send the sorting values if the user picked something
     const data = await fetchProperties({
       ...filters,
       limit: itemsPerPage,
-      offset
+      offset,
+      ...(sortBy && { sortBy, sortOrder })
     });
 
     setProperties(data.results);
@@ -80,6 +88,39 @@ const handlePageChange = (newPage) => {
   window.scrollTo(0, 0);
 };
 
+//Week 9: 
+// sorting options for the user to choose from with default options for each field 
+const defaultSortOrders = {
+  L_SystemPrice: 'ASC',
+  ListingContractDate: 'DESC',
+  LM_Int2_3: 'ASC',
+  L_Keyword2: 'DESC'
+};
+
+//Week 9: language used for each field 
+const sortOrderLabels = {
+  L_SystemPrice:       { ASC: 'Lowest price',    DESC: 'Highest price' },
+  ListingContractDate: { ASC: 'Oldest listings', DESC: 'Newest listings' },
+  LM_Int2_3:           { ASC: 'Smallest homes',  DESC: 'Largest homes' },
+  L_Keyword2:          { ASC: 'Fewest beds',     DESC: 'Most beds' }
+};
+
+//Week 9: go back to first page whenever sorted 
+const handleSortByChange = (e) => {
+  const newSortBy = e.target.value;
+  setSortBy(newSortBy);
+
+  // pick the direction that makes sense for this field
+  setSortOrder(defaultSortOrders[newSortBy] || 'ASC');
+
+  setCurrentPage(1);
+};
+
+const handleSortOrderChange = (e) => {
+  setSortOrder(e.target.value);
+  setCurrentPage(1);
+};
+
 // calculate the total number of pages
 const totalPages = Math.ceil(total / itemsPerPage);
 
@@ -103,6 +144,28 @@ return (
     <div className="search-container">
       {/* connected filter component to the ListingsPage  */}
       <PropertyFilters onSearch={handleSearch} />
+    </div>
+
+    {/* Week 9: how sorting is */}
+    <div className="sort-controls">
+      <label htmlFor="sort-by">Sort by:</label>
+
+      {/* these values have to match the backend */}
+      <select id="sort-by" value={sortBy} onChange={handleSortByChange}>
+        <option value="">Default</option>
+        <option value="L_SystemPrice">Price</option>
+        <option value="ListingContractDate">Date Listed</option>
+        <option value="LM_Int2_3">Size</option>
+        <option value="L_Keyword2">Bedrooms</option>
+      </select>
+
+      {/* only show the direction dropdown once a sort field is picked */}
+      {sortBy && (
+        <select value={sortOrder} onChange={handleSortOrderChange}>
+          <option value="ASC">{sortOrderLabels[sortBy].ASC}</option>
+          <option value="DESC">{sortOrderLabels[sortBy].DESC}</option>
+        </select>
+      )}
     </div>
 
 {!loading && !error && (
@@ -136,7 +199,7 @@ return (
 
 function PropertyCard({ property }) {
   //Week 8: navigate to the property detail page when a card is clicked
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
 
   //display the property image carousel, price, address, city, state, number of bedrooms, bathrooms, and square footage
   const handleClick = () => {
