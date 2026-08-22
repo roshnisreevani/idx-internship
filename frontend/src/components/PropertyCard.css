@@ -1,0 +1,69 @@
+.property-card {
+  border-radius: 14px;
+  overflow: hidden;
+  background: white;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.property-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+}
+
+.property-image {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.property-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 18px;
+  background: linear-gradient(
+    transparent,
+    rgba(0,0,0,0.75)
+  );
+  color: white;
+}
+
+.image-overlay .price {
+  color: white;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.image-overlay .address {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.image-overlay .city {
+  color: #ddd;
+  font-size: 14px;
+  margin-top: 3px;
+}
+
+.property-info {
+  padding: 18px;
+}
+
+.property-details {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+}
