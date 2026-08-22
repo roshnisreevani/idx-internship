@@ -10,6 +10,8 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json());
 // log every request
+
+
 // Week 9: log every request to the console with a timestamp, method, URL, status code, and duration
 //middleware function that runs on everytime  a request is made. 
 app.use((req, res, next) => {

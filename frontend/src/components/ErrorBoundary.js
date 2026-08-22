@@ -1,5 +1,7 @@
 import React from 'react';
 
+//If there is an error in the app, this component will catch it and display a message instead of the whole page going blank
+
 // catches errors so the whole page doesn't go blank
 class ErrorBoundary extends React.Component {
   constructor(props) {

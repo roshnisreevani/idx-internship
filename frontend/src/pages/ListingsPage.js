@@ -5,6 +5,7 @@ import './ListingsPage.css';
 import Pagination from '../components/Pagination';
 import { useNavigate } from 'react-router-dom';
 import PropertyImageCarousel from '../components/PropertyImageCarousel';
+import PropertyCard from '../components/PropertyCard';
 
 //accept filters instead of reloading every time
 function ListingsPage() { 
@@ -33,6 +34,7 @@ function ListingsPage() {
   const [itemsPerPage] = useState(20);
 
   //Week 9: let users sort properties by price, date, size, or beds (Part A: Sorting)
+  //For the frontend - state variables to send to the backend for sorting
   const [sortBy, setSortBy] = useState('');
 
   // direction of the sort, either ASC or DESC
@@ -196,63 +198,6 @@ return (
   </div>
 );
 
-
-function PropertyCard({ property }) {
-  //Week 8: navigate to the property detail page when a card is clicked
-  const navigate = useNavigate(); 
-
-  //display the property image carousel, price, address, city, state, number of bedrooms, bathrooms, and square footage
-  const handleClick = () => {
-    navigate(`/property/${property.L_ListingID}`);
-  };
-
-  return (
-    <div className="property-card" onClick={handleClick}>
-
-    <div className="property-image">
-        {/* display multiple photos of a property */}      <PropertyImageCarousel
-        photos={property.L_Photos ? JSON.parse(property.L_Photos) : []}
-        alt={property.L_Address}
-      />
-
-      <div className="image-overlay">
-        <div className="price">
-          ${property.L_SystemPrice?.toLocaleString()}
-        </div>
-
-        <div className="address">
-          {property.L_Address}
-        </div>
-
-        <div className="city">
-          {property.L_City}, {property.L_State}
-        </div>
-      </div>
-    </div>
-
-<div className="property-info">
-
-  <div className="property-details">
-
-         
-          <span>{property.L_Keyword2} beds</span>
-          <span>•</span>
-          <span>{property.LM_Dec_3} baths</span>
-
-          {property.LM_Int2_3 && (
-            <>
-              <span>•</span>
-              <span>{property.LM_Int2_3.toLocaleString()} sqft</span>
-            </>
-          )}
-        </div>
-
-      </div>
-
-    </div>
-    
-  );
-}
 }
 
 export default ListingsPage;
