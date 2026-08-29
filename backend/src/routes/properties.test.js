@@ -72,3 +72,124 @@ describe('GET /api/properties/:id/openhouses', () => {
 afterAll(async () => {
   await pool.end();
 });
+
+describe('GET /api/properties validation', () => {
+  test('returns an error for an invalid offset', async () => {
+    const response = await request(app)
+      .get('/api/properties?offset=abc')
+      .expect(400);
+
+    expect(response.body.error).toBe(
+      'offset must be a number'
+    );
+  });
+
+  test('returns an error for a negative offset', async () => {
+    const response = await request(app)
+      .get('/api/properties?offset=-1')
+      .expect(400);
+
+    expect(response.body.error).toBe(
+      'offset cannot be negative'
+    );
+  });
+
+  test('returns an error for an invalid minimum price', async () => {
+    const response = await request(app)
+      .get('/api/properties?minPrice=abc')
+      .expect(400);
+
+    expect(response.body.error).toBe(
+      'minPrice must be a number'
+    );
+  });
+
+  test('returns an error for an invalid maximum price', async () => {
+    const response = await request(app)
+      .get('/api/properties?maxPrice=abc')
+      .expect(400);
+
+    expect(response.body.error).toBe(
+      'maxPrice must be a number'
+    );
+  });
+
+  test('returns an error for an invalid number of beds', async () => {
+    const response = await request(app)
+      .get('/api/properties?beds=abc')
+      .expect(400);
+
+    expect(response.body.error).toBe(
+      'beds must be a number'
+    );
+  });
+
+  test('returns an error for an invalid number of baths', async () => {
+    const response = await request(app)
+      .get('/api/properties?baths=abc')
+      .expect(400);
+
+    expect(response.body.error).toBe(
+      'baths must be a number'
+    );
+  });
+
+  test('returns an error for an invalid sort field', async () => {
+    const response = await request(app)
+      .get('/api/properties?sortBy=invalidField')
+      .expect(400);
+
+    expect(response.body.error).toBe(
+      'Invalid sort field'
+    );
+  });
+
+  test('returns an error for an invalid sort order', async () => {
+    const response = await request(app)
+      .get(
+        '/api/properties?sortBy=L_SystemPrice&sortOrder=INVALID'
+      )
+      .expect(400);
+
+    expect(response.body.error).toBe(
+      'Invalid sort order'
+    );
+  });
+});
+
+describe('GET /api/properties sorting', () => {
+  test('returns properties sorted by price', async () => {
+    const response = await request(app)
+      .get(
+        '/api/properties?sortBy=L_SystemPrice&sortOrder=ASC'
+      )
+      .expect(200);
+
+    expect(response.body).toHaveProperty('results');
+    expect(Array.isArray(response.body.results)).toBe(true);
+  });
+
+  test('uses ascending order when sort order is not provided', async () => {
+    const response = await request(app)
+      .get('/api/properties?sortBy=L_SystemPrice')
+      .expect(200);
+
+    expect(response.body).toHaveProperty('results');
+  });
+});
+
+describe('GET /api/properties/:id/openhouses success cases', () => {
+  test('returns open houses for an existing property', async () => {
+    const response = await request(app)
+      .get('/api/properties/1118422731/openhouses')
+      .expect(200);
+
+    expect(response.body).toHaveProperty('propertyId');
+    expect(response.body).toHaveProperty('count');
+    expect(response.body).toHaveProperty('openhouses');
+
+    expect(
+      Array.isArray(response.body.openhouses)
+    ).toBe(true);
+  });
+});

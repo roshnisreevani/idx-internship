@@ -165,7 +165,7 @@ function ListingsPage() {
       </div>
 
       <p className="property-count">
-        Showing {((currentPage - 1) * itemsPerPage) + 1} -
+         Showing {((currentPage - 1) * itemsPerPage) + 1} -{' '}
         {Math.min(currentPage * itemsPerPage, total)} of {total} properties
       </p>
 

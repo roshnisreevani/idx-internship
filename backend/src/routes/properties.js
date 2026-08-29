@@ -1,21 +1,18 @@
-const express = require('express'); // import Express
-const router = express.Router(); // create a router for property routes
-const pool = require('../db/mysql'); // database connection
+const express = require('express');
+const router = express.Router();
+const pool = require('../db/mysql');
 
-// route for getting all open houses for one property
+// Get all open houses for a property
 router.get('/:id/openhouses', async (req, res) => {
   try {
-
-    // get the listing ID from the URL
     const { id } = req.params;
 
-    // make sure the property exists
+    // Check that the property exists first
     const [propertyCheck] = await pool.query(
       'SELECT L_ListingID FROM rets_property WHERE L_ListingID = ?',
       [id]
     );
 
-    // return an error if the property doesn't exist
     if (propertyCheck.length === 0) {
       return res.status(404).json({
         error: 'Property not found',
@@ -23,21 +20,18 @@ router.get('/:id/openhouses', async (req, res) => {
       });
     }
 
-    // if exists: get all open houses for this property
+    // Get the open houses for this property
     const [openhouses] = await pool.query(
       'SELECT * FROM rets_openhouse WHERE L_ListingID = ? ORDER BY OpenHouseDate, OH_StartTime',
       [id]
     );
 
-    // return the open houses info
     res.json({
       propertyId: id,
       count: openhouses.length,
       openhouses
     });
-
   } catch (error) {
-    // show if something went wrong
     console.error(error);
 
     res.status(500).json({
@@ -46,20 +40,17 @@ router.get('/:id/openhouses', async (req, res) => {
   }
 });
 
-// gets details for one property by its listing ID
+// Get details for one property
 router.get('/:id', async (req, res) => {
   try {
-
-    // get the listing ID from the URL
     const { id } = req.params;
 
-    // make sure the property exists
+    // Check that the property exists
     const [propertyCheck] = await pool.query(
       'SELECT L_ListingID FROM rets_property WHERE L_ListingID = ?',
       [id]
     );
 
-    // return an error if the property doesn't exist
     if (propertyCheck.length === 0) {
       return res.status(404).json({
         error: 'Property not found',
@@ -67,17 +58,13 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    // search for the property using its listing ID
     const [results] = await pool.query(
       'SELECT * FROM rets_property WHERE L_ListingID = ?',
       [id]
     );
 
-    // return the property details
     res.json(results[0]);
-
   } catch (error) {
-    // show if something went wrong
     console.error(error);
 
     res.status(500).json({
@@ -86,11 +73,21 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// route for getting all properties with filters
+// Get properties with filters, sorting, and pagination
 router.get('/', async (req, res) => {
   try {
+    const {
+      city,
+      zipcode,
+      minPrice,
+      maxPrice,
+      beds,
+      baths,
+      sortBy,
+      sortOrder
+    } = req.query;
 
-    // Week 9: thsi makes sure that the limit is actually a number, if it is a string it returns an error 
+    // Make sure numeric values are actually numbers
     if (req.query.limit && isNaN(req.query.limit)) {
       return res.status(400).json({
         error: 'limit must be a number'
@@ -103,24 +100,6 @@ router.get('/', async (req, res) => {
       });
     }
 
-    // pagination values (the default is the first 20 properties)
-    const limit = parseInt(req.query.limit) || 20;
-    const offset = parseInt(req.query.offset) || 0;
-
-    // Week 9: sorting to the property fields for the backend 
-    const {
-      city,
-      zipcode,
-      minPrice,
-      maxPrice,
-      beds,
-      baths,
-      sortBy,
-      sortOrder
-    } = req.query;
-
-    // make sure the user has entered valid values & rejects if invalid 
-    //Performance Validation for week 9 as well 
     if (minPrice && isNaN(minPrice)) {
       return res.status(400).json({
         error: 'minPrice must be a number'
@@ -145,6 +124,10 @@ router.get('/', async (req, res) => {
       });
     }
 
+    // Default to 20 properties starting at the beginning
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = parseInt(req.query.offset) || 0;
+
     if (limit < 1 || limit > 100) {
       return res.status(400).json({
         error: 'limit must be between 1 and 100'
@@ -157,15 +140,15 @@ router.get('/', async (req, res) => {
       });
     }
 
-    // Week 9: array of valid sorting fields. if request is not in this field it will return an error
+    // Only allow sorting by fields we support
     const validSortFields = [
-      'L_SystemPrice', //price
-      'ListingContractDate', //listing date
-      'LM_Int2_3', //sq footage 
-      'L_Keyword2' //beds
+      'L_SystemPrice',
+      'ListingContractDate',
+      'LM_Int2_3',
+      'L_Keyword2'
     ];
 
-    const validSortOrders = ['ASC', 'DESC']; //Week 9: Only restricted to ascending or descending order
+    const validSortOrders = ['ASC', 'DESC'];
 
     if (sortBy && !validSortFields.includes(sortBy)) {
       return res.status(400).json({
@@ -182,61 +165,55 @@ router.get('/', async (req, res) => {
       });
     }
 
-    // build the WHERE clause based on the filters provided by the user
+    // Build the filters based on what the user searched for
     const conditions = [];
     const values = [];
 
-    // only filter by city if it was provided
     if (city) {
-      conditions.push("L_City = ?");
+      conditions.push('L_City = ?');
       values.push(city);
     }
 
-    // only filter by zipcode if it was provided
     if (zipcode) {
-      conditions.push("L_Zip = ?");
+      conditions.push('L_Zip = ?');
       values.push(zipcode);
     }
 
-    // only include properties that cost at least minPrice
     if (minPrice) {
-      conditions.push("L_SystemPrice >= ?");
+      conditions.push('L_SystemPrice >= ?');
       values.push(parseFloat(minPrice));
     }
 
-    // only include properties that cost at most maxPrice
     if (maxPrice) {
-      conditions.push("L_SystemPrice <= ?");
+      conditions.push('L_SystemPrice <= ?');
       values.push(parseFloat(maxPrice));
     }
 
-    // only include properties with at least this many bedrooms
     if (beds) {
-      conditions.push("L_Keyword2 >= ?");
+      conditions.push('L_Keyword2 >= ?');
       values.push(parseInt(beds));
     }
 
-    // only include properties with at least this many bathrooms
     if (baths) {
-      conditions.push("LM_Dec_3 >= ?");
+      conditions.push('LM_Dec_3 >= ?');
       values.push(parseInt(baths));
     }
 
-    // build the WHERE clause only when filters exist
+    // Only add WHERE when there are filters
     const whereClause =
       conditions.length > 0
-        ? "WHERE " + conditions.join(" AND ")
-        : "";
+        ? 'WHERE ' + conditions.join(' AND ')
+        : '';
 
-    // count how many properties match the filters
+    // Get the total number of matching properties
     const [countResult] = await pool.query(
-      `SELECT COUNT(*) AS total FROM rets_property ${whereClause}`,
+      'SELECT COUNT(*) AS total FROM rets_property ' + whereClause,
       values
     );
 
     const total = countResult[0].total;
 
-    // build the ORDER BY clause if sorting was requested
+    // Add sorting if the user selected a sort field
     let orderClause = '';
 
     if (sortBy) {
@@ -244,25 +221,22 @@ router.get('/', async (req, res) => {
         ? sortOrder.toUpperCase()
         : 'ASC';
 
-      orderClause = `ORDER BY ${sortBy} ${order}`; 
+      orderClause = `ORDER BY ${sortBy} ${order}`;
     }
 
-    // get the matching properties
+    // Get the properties for the current page
     const [results] = await pool.query(
       `SELECT * FROM rets_property ${whereClause} ${orderClause} LIMIT ? OFFSET ?`,
       [...values, limit, offset]
     );
 
-    // send everything back as JSON
     res.json({
       total,
       limit,
       offset,
       results
     });
-
   } catch (error) {
-
     console.error(error);
 
     res.status(500).json({
