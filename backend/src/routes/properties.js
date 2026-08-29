@@ -100,6 +100,24 @@ router.get('/', async (req, res) => {
       });
     }
 
+    // pagination values (the default is the first 20 properties)
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = parseInt(req.query.offset) || 0;
+
+    // Week 9: sorting to the property fields for the backend 
+    const {
+      city,
+      zipcode,
+      minPrice,
+      maxPrice,
+      beds,
+      baths,
+      sortBy,
+      sortOrder
+    } = req.query;
+
+    // make sure the user has entered valid values & rejects if invalid 
+    //Performance Validation for week 9 as well 
     if (minPrice && isNaN(minPrice)) {
       return res.status(400).json({
         error: 'minPrice must be a number'
@@ -140,15 +158,15 @@ router.get('/', async (req, res) => {
       });
     }
 
-    // Only allow sorting by fields we support
+    // Week 9: array of valid sorting fields. if request is not in this field it will return an error
     const validSortFields = [
-      'L_SystemPrice',
-      'ListingContractDate',
-      'LM_Int2_3',
-      'L_Keyword2'
+      'L_SystemPrice', //price
+      'ListingContractDate', //listing date
+      'LM_Int2_3', //sq footage 
+      'L_Keyword2' //beds
     ];
 
-    const validSortOrders = ['ASC', 'DESC'];
+    const validSortOrders = ['ASC', 'DESC']; //Week 9: Only restricted to ascending or descending order
 
     if (sortBy && !validSortFields.includes(sortBy)) {
       return res.status(400).json({
