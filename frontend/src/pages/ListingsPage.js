@@ -22,7 +22,6 @@ function ListingsPage() {
   // stores the total number of properties
   const [total, setTotal] = useState(0);
 
-
   //Week 7 New Work:allows users to search for properties 
   // based on specific criteria. 
   const [filters, setFilters] = useState({});
@@ -33,8 +32,7 @@ function ListingsPage() {
   // number of properties shown per page
   const [itemsPerPage] = useState(20);
 
-  //Week 9: let users sort properties by price, date, size, or beds (Part A: Sorting)
-  //For the frontend - state variables to send to the backend for sorting
+  //Week 9: let users sort properties by price, date, size, or beds
   const [sortBy, setSortBy] = useState('');
 
   // direction of the sort, either ASC or DESC
@@ -46,158 +44,150 @@ function ListingsPage() {
   }, [filters, currentPage, sortBy, sortOrder]);
 
   // get properties from the backend
-  //updated to accept filters from the search form instead of loading every property 
   async function loadProperties() {
-  try {
-    setLoading(true);
-    setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-    // calculate where this page should start
-    const offset = (currentPage - 1) * itemsPerPage;
+      // calculate where this page should start
+      const offset = (currentPage - 1) * itemsPerPage;
 
-    // send the filters and pagination to the backend
-    // only send the sorting values if the user picked something
-    const data = await fetchProperties({
-      ...filters,
-      limit: itemsPerPage,
-      offset,
-      ...(sortBy && { sortBy, sortOrder })
-    });
+      // send the filters and pagination to the backend
+      const data = await fetchProperties({
+        ...filters,
+        limit: itemsPerPage,
+        offset,
+        ...(sortBy && { sortBy, sortOrder })
+      });
 
-    setProperties(data.results);
-    setTotal(data.total);
+      setProperties(data.results);
+      setTotal(data.total);
 
-  } catch (err) {
-    setError("Failed to load properties.");
-
-  } finally {
-    setLoading(false);
+    } catch (err) {
+      setError("Failed to load properties.");
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
-//helper functions: when user performs new search:
-// update the filters and go back to the first page
-const handleSearch = (newFilters) => {
-  setFilters(newFilters);
-  setCurrentPage(1);
-};
+  // update the filters and go back to the first page
+  const handleSearch = (newFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
 
-//changes page number
-const handlePageChange = (newPage) => {
-  setCurrentPage(newPage);
+  // changes page number
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    window.scrollTo(0, 0);
+  };
 
-  // scroll back to the top of the page after changing pages
-  window.scrollTo(0, 0);
-};
+  // default sort direction for each field
+  const defaultSortOrders = {
+    L_SystemPrice: 'ASC',
+    ListingContractDate: 'DESC',
+    LM_Int2_3: 'ASC',
+    L_Keyword2: 'DESC'
+  };
 
-//Week 9: 
-// sorting options for the user to choose from with default options for each field 
-const defaultSortOrders = {
-  L_SystemPrice: 'ASC',
-  ListingContractDate: 'DESC',
-  LM_Int2_3: 'ASC',
-  L_Keyword2: 'DESC'
-};
+  // labels for each sort direction
+  const sortOrderLabels = {
+    L_SystemPrice: { ASC: 'Lowest price', DESC: 'Highest price' },
+    ListingContractDate: { ASC: 'Oldest listings', DESC: 'Newest listings' },
+    LM_Int2_3: { ASC: 'Smallest homes', DESC: 'Largest homes' },
+    L_Keyword2: { ASC: 'Fewest beds', DESC: 'Most beds' }
+  };
 
-//Week 9: language used for each field 
-const sortOrderLabels = {
-  L_SystemPrice:       { ASC: 'Lowest price',    DESC: 'Highest price' },
-  ListingContractDate: { ASC: 'Oldest listings', DESC: 'Newest listings' },
-  LM_Int2_3:           { ASC: 'Smallest homes',  DESC: 'Largest homes' },
-  L_Keyword2:          { ASC: 'Fewest beds',     DESC: 'Most beds' }
-};
+  // change sorting field
+  const handleSortByChange = (e) => {
+    const newSortBy = e.target.value;
+    setSortBy(newSortBy);
+    setSortOrder(defaultSortOrders[newSortBy] || 'ASC');
+    setCurrentPage(1);
+  };
 
-//Week 9: go back to first page whenever sorted 
-const handleSortByChange = (e) => {
-  const newSortBy = e.target.value;
-  setSortBy(newSortBy);
+  const handleSortOrderChange = (e) => {
+    setSortOrder(e.target.value);
+    setCurrentPage(1);
+  };
 
-  // pick the direction that makes sense for this field
-  setSortOrder(defaultSortOrders[newSortBy] || 'ASC');
+  // calculate the total number of pages
+  const totalPages = Math.ceil(total / itemsPerPage);
 
-  setCurrentPage(1);
-};
-
-const handleSortOrderChange = (e) => {
-  setSortOrder(e.target.value);
-  setCurrentPage(1);
-};
-
-// calculate the total number of pages
-const totalPages = Math.ceil(total / itemsPerPage);
-
-   
   if (loading) {
-  return <div className="loading">Loading properties...</div>;
-}
+    return <div className="loading">Loading properties...</div>;
+  }
 
-if (error) {
-  return <div className="error">{error}</div>;
-}
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
 
-return (
-  <div className="listings-page">
+  return (
+    <div className="listings-page">
 
-    <div className="hero-section">
-      <h1>Find your perfect home</h1>
-      <p>Search by city, price, bedrooms, and more.</p>
-    </div>
+      <div className="hero-section">
+        <h1>Find your perfect home</h1>
+        <p>Search by city, price, bedrooms, and more.</p>
+      </div>
 
-    <div className="search-container">
-      {/* connected filter component to the ListingsPage  */}
-      <PropertyFilters onSearch={handleSearch} />
-    </div>
+      <div className="search-container">
+        <PropertyFilters onSearch={handleSearch} />
+      </div>
 
-    {/* Week 9: how sorting is */}
-    <div className="sort-controls">
-      <label htmlFor="sort-by">Sort by:</label>
+      <div className="sort-controls">
+        <label htmlFor="sort-by">Sort by:</label>
 
-      {/* these values have to match the backend */}
-      <select id="sort-by" value={sortBy} onChange={handleSortByChange}>
-        <option value="">Default</option>
-        <option value="L_SystemPrice">Price</option>
-        <option value="ListingContractDate">Date Listed</option>
-        <option value="LM_Int2_3">Size</option>
-        <option value="L_Keyword2">Bedrooms</option>
-      </select>
-
-      {/* only show the direction dropdown once a sort field is picked */}
-      {sortBy && (
-        <select value={sortOrder} onChange={handleSortOrderChange}>
-          <option value="ASC">{sortOrderLabels[sortBy].ASC}</option>
-          <option value="DESC">{sortOrderLabels[sortBy].DESC}</option>
+        <select
+          id="sort-by"
+          value={sortBy}
+          onChange={handleSortByChange}
+        >
+          <option value="">Default</option>
+          <option value="L_SystemPrice">Price</option>
+          <option value="ListingContractDate">Date Listed</option>
+          <option value="LM_Int2_3">Size</option>
+          <option value="L_Keyword2">Bedrooms</option>
         </select>
+
+        {sortBy && (
+          <select
+            value={sortOrder}
+            onChange={handleSortOrderChange}
+          >
+            <option value="ASC">
+              {sortOrderLabels[sortBy].ASC}
+            </option>
+            <option value="DESC">
+              {sortOrderLabels[sortBy].DESC}
+            </option>
+          </select>
+        )}
+      </div>
+
+      <p className="property-count">
+        Showing {((currentPage - 1) * itemsPerPage) + 1} -
+        {Math.min(currentPage * itemsPerPage, total)} of {total} properties
+      </p>
+
+      <div className="property-grid">
+        {properties.map(property => (
+          <PropertyCard
+            key={property.L_ListingID}
+            property={property}
+          />
+        ))}
+      </div>
+
+      {properties.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       )}
+
     </div>
-
-{!loading && !error && (
-  <p className="property-count">
-    Showing {((currentPage - 1) * itemsPerPage) + 1} -
-    {Math.min(currentPage * itemsPerPage, total)} of {total} properties
-  </p>
-)}
-
-    <div className="property-grid">
-  {properties.map(property => ( //creates a card for each property in the list
-    <PropertyCard
-      key={property.L_ListingID}
-      property={property}
-    />
-  ))}
-</div>
-
-{!loading && !error && properties.length > 0 && (
-  <Pagination
-    currentPage={currentPage}
-    totalPages={totalPages}
-    onPageChange={handlePageChange}
-  />
-)}
-
-
-  </div>
-);
-
+  );
 }
 
 export default ListingsPage;

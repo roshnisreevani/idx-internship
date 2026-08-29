@@ -3,3 +3,4 @@ node_modules/
 rets_property.sql
 rets_openhouse.sql
 
+backend/coverage/
