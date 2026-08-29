@@ -52,8 +52,11 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-//starts server
+// Only start the server when this file is run directly
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+module.exports = app;
